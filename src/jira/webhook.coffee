@@ -42,8 +42,9 @@ class Webhook
       if author = Utils.cache.get "#{ticket.key}:Comment"
         User.withEmail(author)
         .then (user) ->
-          event.comment.author = user
-          ticket
+          if user.name
+            event.comment.author = user
+            ticket
       else
         ticket
     .then (ticket) =>
@@ -64,10 +65,11 @@ class Webhook
     chatUser = null
     User.withUsername(username)
     .then (jiraUser) ->
-      chatUser = Utils.lookupChatUserWithJira jiraUser
-      Promise.reject() unless chatUser
-      Create = require "./create"
-      Create.fromKey(event.issue.key)
+      if jiraUser
+        chatUser = Utils.lookupChatUserWithJira jiraUser
+        Promise.reject() unless chatUser
+        Create = require "./create"
+        Create.fromKey(event.issue.key)
     .then (ticket) =>
       @robot.emit "JiraWebhookTicketMention", ticket, chatUser, event, context
 
@@ -102,16 +104,18 @@ class Webhook
     chatUser = null
     User.withUsername(item.to)
     .then (jiraUser) ->
-      chatUser = Utils.lookupChatUserWithJira jiraUser
-      Promise.reject() unless chatUser
-      Create = require "./create"
-      Create.fromKey(event.issue.key)
+      if jiraUser
+        chatUser = Utils.lookupChatUserWithJira jiraUser
+        Promise.reject() unless chatUser
+        Create = require "./create"
+        Create.fromKey(event.issue.key)
     .then (ticket) =>
       if author = Utils.cache.get "#{ticket.key}:Assigned"
         User.withEmail(author)
         .then (user) ->
-          event.user = user
-          ticket
+          if user.name
+            event.user = user
+            ticket
       else
         ticket
     .then (ticket) =>

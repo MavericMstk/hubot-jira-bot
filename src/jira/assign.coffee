@@ -11,12 +11,13 @@ class Assign
     if chatUser?.profile?.email?
       User.withEmail(chatUser.profile.email)
       .then (user) ->
-        Utils.fetch "#{Config.jira.url}/rest/api/2/issue/#{ticket.key}",
-          method: "PUT"
-          body: JSON.stringify
-            fields:
-              assignee:
-                name: user.name
+        if user.name
+          Utils.fetch "#{Config.jira.url}/rest/api/2/issue/#{ticket.key}",
+            method: "PUT"
+            body: JSON.stringify
+              fields:
+                assignee:
+                  name: user.name
       .then ->
         Create = require "./create"
         Create.fromKey ticket.key
