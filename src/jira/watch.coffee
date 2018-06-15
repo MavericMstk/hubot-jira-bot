@@ -12,7 +12,7 @@ class Watch
     if chatUser?.profile?.email?
       User.withEmail(chatUser.profile.email)
       .then (user) ->
-        if user.name
+        if user && user.name
           Utils.fetch "#{Config.jira.url}/rest/api/2/issue/#{key}/watchers#{if remove then "?username=#{user.name}" else ""}",
             method: if remove then "DELETE" else "POST"
             body: JSON.stringify user.name unless remove

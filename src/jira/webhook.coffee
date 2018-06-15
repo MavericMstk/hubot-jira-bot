@@ -42,7 +42,7 @@ class Webhook
       if author = Utils.cache.get "#{ticket.key}:Comment"
         User.withEmail(author)
         .then (user) ->
-          if user.name
+          if user && user.name
             event.comment.author = user
             ticket
       else
@@ -113,7 +113,7 @@ class Webhook
       if author = Utils.cache.get "#{ticket.key}:Assigned"
         User.withEmail(author)
         .then (user) ->
-          if user.name
+          if user && user.name
             event.user = user
             ticket
       else

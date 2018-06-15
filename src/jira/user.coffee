@@ -8,6 +8,7 @@ class User
   @withEmail: (email) ->
     Utils.fetch("#{Config.jira.url}/rest/api/2/user/search?username=#{email}")
     .then (users) ->
+      _(users).map (user) -> user.emailAddress = user.emailAddress.toLowerCase()
       jiraUser = _(users).findWhere emailAddress: email if users and users.length > 0
       throw "Cannot find jira user with #{email}" unless jiraUser
       jiraUser
