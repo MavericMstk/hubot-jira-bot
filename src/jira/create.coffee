@@ -76,6 +76,72 @@ class Create
       Utils.robot.emit "JiraTicketCreationFailed", error, context if emit
       Promise.reject error
 
+  @withRoom: (project, type, summary, room, fields, emit=no) ->
+    toState = null
+    assignee = null
+
+    if Config.jira.username
+      user = User.withUsername(Config.jira.username)
+    else
+      user = Promise.resolve()
+
+    user.then (reporter) ->
+      { summary, description, toState, assignee, labels, priority } = Utils.extract.all summary
+      labels.unshift room
+
+      issue =
+        fields:
+          project: key: project
+          summary: summary
+          description: ""
+          issuetype: name: type
+
+      _(issue.fields).extend fields if fields
+      issue.fields.labels = _(issue.fields.labels).union labels
+      issue.fields.description += """
+        #{(if description then description + "\n\n" else "")}
+        Reported by #{reporter.displayName} in ##{room} in #{Utils.robot.adapterName}
+      """
+      issue.fields.reporter = reporter if reporter
+      issue.fields.priority = id: priority.id if priority
+      Create.fromJSON issue
+    .then (json) ->
+      Create.fromKey(json.key)
+      .then (ticket) ->
+        Promise.all([
+          Transition.forTicketToState ticket, toState, context, no, no if toState
+          Assign.forTicketToPerson ticket, assignee, context, no, no if assignee
+          ticket
+        ])
+        .catch (error) ->
+          Utils.robot.logger.error error
+          [ undefined, text: error, ticket ]
+      .then (results) ->
+        [ transition, assignee, ticket ] = results
+        roomProject = Config.maps.projects[room]
+        console.log ticket
+        if emit
+          console.log "Emitted JiraRoomTicketCreated"
+          Utils.robot.emit "JiraRoomTicketCreated",
+            room: room
+            ticket: ticket
+            transition: transition
+            assignee: assignee
+        unless emit and roomProject is project
+          console.log "Emitted JiraRoomTicketCreatedElsewhere"
+          Utils.robot.emit "JiraRoomTicketCreatedElsewhere",
+            room: room
+            ticket: ticket
+            transition: transition
+            assignee: assignee
+        ticket
+      .catch (error) ->
+        Utils.robot.logger.error error.stack
+    .catch (error) ->
+      Utils.robot.logger.error error.stack
+      Utils.robot.emit "JiraRoomTicketCreationFailed", error if emit
+      Promise.reject error
+    
   @fromKey: (key) ->
     key = key.trim().toUpperCase()
     params =
