@@ -119,27 +119,17 @@ class Create
       .then (results) ->
         [ transition, assignee, ticket ] = results
         roomProject = Config.maps.projects[room]
-        console.log ticket
-        if emit
-          console.log "Emitted JiraRoomTicketCreated"
-          Utils.robot.emit "JiraRoomTicketCreated",
-            room: room
-            ticket: ticket
-            transition: transition
-            assignee: assignee
-        unless emit and roomProject is project
-          console.log "Emitted JiraRoomTicketCreatedElsewhere"
-          Utils.robot.emit "JiraRoomTicketCreatedElsewhere",
-            room: room
-            ticket: ticket
-            transition: transition
-            assignee: assignee
+        Utils.robot.emit "jira.ticket.created",
+          room: room
+          ticket: ticket
+          transition: transition
+          assignee: assignee
         ticket
       .catch (error) ->
         Utils.robot.logger.error error.stack
     .catch (error) ->
       Utils.robot.logger.error error.stack
-      Utils.robot.emit "JiraRoomTicketCreationFailed", error if emit
+      Utils.robot.emit "jira.ticket.failed", error if emit
       Promise.reject error
     
   @fromKey: (key) ->
