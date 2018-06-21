@@ -124,6 +124,7 @@ class Create
           ticket: ticket
           transition: transition
           assignee: assignee
+          fields: fields
         ticket
       .catch (error) ->
         Utils.robot.logger.error error.stack
