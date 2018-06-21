@@ -104,6 +104,10 @@ class Create
       """
       issue.fields.reporter = reporter if reporter
       issue.fields.priority = id: priority.id if priority
+
+      if issue.fields['extra']
+        delete issue.fields['extra']
+
       Create.fromJSON issue
     .then (json) ->
       Create.fromKey(json.key)
